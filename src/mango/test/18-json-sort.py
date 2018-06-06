@@ -136,7 +136,7 @@ class JSONIndexSortOptimisations(mango.DbPerClass):
         explain = self.db.find(selector, sort=["cars"], explain=True)
         self.assertEqual(explain["index"]["name"], "cars-age-name")
 
-    def test_three_index_three(self):
+    def test_three_index_four(self):
         self.db.create_index(["cars", "age", "name"], name="cars-age-name")
         selector = {
             "name": "Eddie",
@@ -148,11 +148,38 @@ class JSONIndexSortOptimisations(mango.DbPerClass):
             }
         }
         try:
-            explain = self.db.find(selector, sort=["cars"], explain=True)
+            self.db.find(selector, explain=True, sort=["cars"])
             raise Exception("Should not get here")
         except Exception as e:
             resp = e.response.json()
             self.assertEqual(resp["error"], "no_usable_index")
+
+    def test_in_between(self):
+        self.db.create_index(["cars", "age", "name"], name="cars-age-name")
+        selector = {
+            "name": "Eddie",
+            "age": 10,
+            "cars": {
+                "$gt": "1"
+            }
+        }
+        self.db.find(selector, explain=True)
+        explain = self.db.find(selector, sort=["cars", "name"], explain=True)
+        self.assertEqual(explain["index"]["name"], "cars-age-name")
+    
+    def test_ignore_after_set_sort_value(self):
+        self.db.create_index(["cars", "age", "name"], name="cars-age-name")
+        selector = {
+            "age": {
+                "$gt": 10
+            },
+            "cars": 2,
+            "name": {
+                "$gt": "A"
+            }
+        }
+        explain = self.db.find(selector, sort=["age"], explain=True)
+        self.assertEqual(explain["index"]["name"], "cars-age-name")
 
     def test_not_use_index_if_other_fields_in_sort(self):
         self.db.create_index(["cars", "age"], name="cars-age")
@@ -166,6 +193,5 @@ class JSONIndexSortOptimisations(mango.DbPerClass):
             self.db.find(selector, sort=["cars", "name"], explain=True)
             raise Exception("Should not get here")
         except Exception as e:
-            print e
             resp = e.response.json()
             self.assertEqual(resp["error"], "no_usable_index")
