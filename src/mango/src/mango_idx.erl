@@ -105,18 +105,8 @@ maybe_filter_by_sort_fields(Indexes, _Selector, []) ->
 
 maybe_filter_by_sort_fields(Indexes, Selector, SortFields) ->
     FilterFun = fun(Idx) ->
-        Cols = mango_idx:columns(Idx),
-        case {mango_idx:type(Idx), Cols} of
-            {_, all_fields} ->
-                true;
-            {<<"text">>, _} ->
-                sets:is_subset(sets:from_list(SortFields), sets:from_list(Cols));
-            {<<"json">>, _} ->
-                NormalizedSortFields = normalize_sort_fields(Cols, SortFields, Selector),
-                lists:prefix(NormalizedSortFields, Cols);
-            {<<"special">>, _} ->
-                lists:prefix(SortFields, Cols)
-        end
+        Mod = idx_mod(Idx),
+        Mod:maybe_filter_by_sort_fields(Idx, SortFields, Selector)
     end,
     case lists:filter(FilterFun, Indexes) of
         [] ->
@@ -124,32 +114,6 @@ maybe_filter_by_sort_fields(Indexes, Selector, SortFields) ->
         FilteredIndexes ->
             {ok, FilteredIndexes}
     end.
-
-
-% This is a user experience improvement. If a selector has a sort field set,
-% an index is only valid if all the fields in the index are also specified
-% in the sort.
-
-% If a field is in the selector is constant, eg {age: {$eq: 21}} and it's
-% part of the index then we can automatically add it to the sort list because 
-% it won't affect sorting.
-
-% This will then increase the likely hood of the index being choosen 
-% and make it a little easier for the user.
-normalize_sort_fields(Cols, SortFields, Selector) ->
-    % Keep any fields in the sort that might not be defined in the index
-    Start = lists:subtract(SortFields, Cols), 
-    lists:foldl(fun (Col, Sort) ->
-        case lists:member(Col, SortFields) of
-            true -> 
-                [Col | Sort];
-            _ -> 
-                case mango_selector:is_constant_field(Selector, Col) of
-                    true -> [Col | Sort];
-                    _ -> Sort
-                end
-        end
-    end, Start, lists:reverse(Cols)).
 
 
 new(Db, Opts) ->

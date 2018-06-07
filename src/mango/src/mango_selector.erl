@@ -640,30 +640,26 @@ has_required_fields_int([{[{Field, Cond}]} | Rest], RequiredFields) ->
 
 
 % Returns true if a field in the selector is a constant value e.g. {a: {$eq: 1}}
-is_constant_field(Selector, Field) ->
-    is_constant_field_int(Selector, Field).
-
-
-is_constant_field_int({[]}, _Field) ->
+is_constant_field({[]}, _Field) ->
     false;
 
-is_constant_field_int(Selector, Field) when not is_list(Selector) ->
-    is_constant_field_int([Selector], Field);
+is_constant_field(Selector, Field) when not is_list(Selector) ->
+    is_constant_field([Selector], Field);
 
-is_constant_field_int([], _Field) ->
+is_constant_field([], _Field) ->
     false;
 
-is_constant_field_int([{[{<<"$and">>, Args}]}], Field) when is_list(Args) ->
-    lists:any(fun(Arg) -> is_constant_field_int(Arg, Field) end, Args);
+is_constant_field([{[{<<"$and">>, Args}]}], Field) when is_list(Args) ->
+    lists:any(fun(Arg) -> is_constant_field(Arg, Field) end, Args);
 
-is_constant_field_int([{[{<<"$and">>, Args}]}], Field) ->
-    is_constant_field_int(Args, Field);
+is_constant_field([{[{<<"$and">>, Args}]}], Field) ->
+    is_constant_field(Args, Field);
 
-is_constant_field_int([{[{SelectorField, {[{Cond, _Val}]}}]} | _Rest], Field) when SelectorField =:= Field ->
+is_constant_field([{[{Field, {[{Cond, _Val}]}}]} | _Rest], Field) ->
     Cond =:= <<"$eq">>;
 
-is_constant_field_int([{[{SelectorField, _}]} | Rest], Field) when SelectorField =/= Field  ->
-    is_constant_field_int(Rest, Field).
+is_constant_field([{[{_UnMatched, _}]} | Rest], Field) ->
+    is_constant_field(Rest, Field).
 
 
 %%%%%%%% module tests below %%%%%%%%
@@ -677,17 +673,32 @@ is_constant_field_basic_test() ->
     ?assertEqual(true, is_constant_field(Selector, Field)).
 
 is_constant_field_basic_two_test() ->
-    Selector = normalize({[{<<"$and">>, [{[{<<"cars">>,{[{<<"$eq">>,<<"2">>}]}}]}, {[{<<"age">>,{[{<<"$gt">>,10}]}}]}]}]}),
+    Selector = normalize({[{<<"$and">>,
+        [
+            {[{<<"cars">>,{[{<<"$eq">>,<<"2">>}]}}]},
+            {[{<<"age">>,{[{<<"$gt">>,10}]}}]}
+        ]
+    }]}),
     Field = <<"cars">>,
     ?assertEqual(true, is_constant_field(Selector, Field)).
 
 is_constant_field_not_eq_test() ->
-    Selector = normalize({[{<<"$and">>, [{[{<<"cars">>,{[{<<"$eq">>,<<"2">>}]}}]}, {[{<<"age">>,{[{<<"$gt">>,10}]}}]}]}]}),
+    Selector = normalize({[{<<"$and">>,
+        [
+            {[{<<"cars">>,{[{<<"$eq">>,<<"2">>}]}}]},
+            {[{<<"age">>,{[{<<"$gt">>,10}]}}]}
+        ]
+    }]}),
     Field = <<"age">>,
     ?assertEqual(false, is_constant_field(Selector, Field)).
 
 is_constant_field_missing_field_test() ->
-    Selector = normalize({[{<<"$and">>, [{[{<<"cars">>,{[{<<"$eq">>,<<"2">>}]}}]}, {[{<<"age">>,{[{<<"$gt">>,10}]}}]}]}]}),
+    Selector = normalize({[{<<"$and">>,
+        [
+            {[{<<"cars">>,{[{<<"$eq">>,<<"2">>}]}}]},
+            {[{<<"age">>,{[{<<"$gt">>,10}]}}]}
+        ]
+    }]}),
     Field = <<"wrong">>,
     ?assertEqual(false, is_constant_field(Selector, Field)).
 

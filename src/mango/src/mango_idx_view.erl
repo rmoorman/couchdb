@@ -24,6 +24,7 @@
     columns/1,
     start_key/1,
     end_key/1,
+    maybe_filter_by_sort_fields/3,
 
     indexable_fields/1,
     field_ranges/1,
@@ -511,3 +512,44 @@ range_pos(Low, Arg, High) ->
                     max
             end
     end.
+
+
+maybe_filter_by_sort_fields(Idx, SortFields, Selector) ->
+    Cols = mango_idx:columns(Idx),
+    case lists:subtract(SortFields, Cols) of
+        [] -> 
+            NormalizedSortFields = normalize_sort_fields(Cols, SortFields, Selector),
+            lists:prefix(NormalizedSortFields, Cols);
+        _ ->
+            false
+    end.
+
+
+% This is an user experience improvement. If a selector has a sort field set
+% then an index is only valid if the prefix of the sort fields match the 
+% prefix of the index fields. 
+
+% e.g Index = [A, B, C] with Sort = [A, B] is a valid sort
+% but if Sort = [B, C] then it is not valid for this index.
+
+% If an indexed field in the selector is constant, eg {A: {$eq: 21}} then
+% we can add it to the sort list because it won't affect sorting and the
+% original sort will still be valid.
+
+% e.g Index = [A, B] with Sort = [B] and selector has {A: 1}. 
+% Then we can make the Sort = [A, B].
+% The sort will work as expected and this will increase the possibility
+% of the index being choosen. It also helps a user where they might not have
+% put correct initial fields in the sort.
+normalize_sort_fields(Cols, SortFields, Selector) ->
+    lists:foldr(fun (Col, Sort) ->
+        case lists:member(Col, SortFields) of
+            true -> 
+                [Col | Sort];
+            _ -> 
+                case mango_selector:is_constant_field(Selector, Col) of
+                    true -> [Col | Sort];
+                    _ -> Sort
+                end
+        end
+    end, [], Cols).

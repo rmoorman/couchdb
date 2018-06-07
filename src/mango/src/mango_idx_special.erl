@@ -22,7 +22,9 @@
     columns/1,
     is_usable/3,
     start_key/1,
-    end_key/1
+    end_key/1,
+
+    maybe_filter_by_sort_fields/3
 ]).
 
 
@@ -96,3 +98,8 @@ end_key([{_, _, '$lte', Key}]) ->
 end_key([{'$eq', Key, '$eq', Key}]) ->
     false = mango_json:special(Key),
     Key.
+
+
+maybe_filter_by_sort_fields(Idx, SortFields, _Selector) ->
+    Cols = mango_idx:columns(Idx),
+    lists:prefix(SortFields, Cols).
