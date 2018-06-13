@@ -65,8 +65,11 @@
     ].
 
 -type purge_fold_options() :: [
-    % Need to enumerate these
-].
+        {start_key, Key::any()} |
+        {end_key, Key::any()} |
+        {end_key_gt, Key::any()} |
+        {dir, fwd | rev}
+    ].
 
 -type db_handle() :: any().
 

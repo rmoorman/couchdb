@@ -423,7 +423,7 @@ get_minimum_purge_seq(#db{} = Db) ->
 
     FoldFun = fun(#doc{id = DocId, body = {Props}}, SeqAcc) ->
         case DocId of
-            <<"_local/purge-", _/binary>> ->
+            <<?LOCAL_DOC_PREFIX, "purge-", _/binary>> ->
                 ClientSeq = couch_util:get_value(<<"purge_seq">>, Props),
                 case ClientSeq of
                     CS when is_integer(CS), CS >= PurgeSeq - PurgeInfosLimit ->
@@ -504,10 +504,18 @@ get_purge_client_fun(DocId, Props) ->
     F0 = couch_util:get_value(<<"verify_function">>, Props),
     try
         F = binary_to_existing_atom(F0, latin1),
-        fun M:F/2
+        case erlang:function_exported(M, F, 2) of
+            true ->
+                fun M:F/2;
+            false ->
+                Fmt2 = "Missing exported function '~p' in '~p'
+                    for purge checkpoint '~s'",
+                couch_log:error(Fmt2, [F0, M0, DocId]),
+                throw(failed)
+        end
     catch error:badarg ->
-        Fmt2 = "Missing function '~p' in '~p' for purge checkpoint '~s'",
-        couch_log:error(Fmt2, [F0, M0, DocId]),
+        Fmt3 = "Missing function '~p' in '~p' for purge checkpoint '~s'",
+        couch_log:error(Fmt3, [F0, M0, DocId]),
         throw(failed)
     end.
 
