@@ -59,7 +59,7 @@ get_value_from_options(Key, Options) ->
 
 get_signature_from_filename(FileName) ->
     FilePathList = filename:split(FileName),
-    [PureFN] = lists:nthtail(length(FilePathList) - 1, FilePathList),
+    PureFN = lists:last(FilePathList),
     PureFNExt = filename:extension(PureFN),
     filename:basename(PureFN, PureFNExt).
 

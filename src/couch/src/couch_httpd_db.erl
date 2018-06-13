@@ -385,7 +385,7 @@ db_req(#httpd{method='POST',path_parts=[_,<<"_purge">>]}=Req, Db) ->
 
     {ok, Replies} = couch_db:purge_docs(Db, PurgeReqs),
 
-    Results = lists:zipwith(fun({{Id, _}, Reply}) ->
+    Results = lists:zipwith(fun({Id, _}, {ok, Reply}) ->
         {Id, couch_doc:revs_to_strs(Reply)}
     end, IdRevs, Replies),
 
