@@ -214,9 +214,9 @@ resp_health(Resps) ->
 has_quorum(Resps, Count, W) ->
     OkResps = [R || {ok, _} = R <- Resps],
     OkCounts = lists:foldl(fun(R, Acc) ->
-        dict:update_counter(R, 1, Acc)
-    end, dict:new(), OkResps),
-    MaxOk = lists:max([0 | element(2, lists:unzip(dict:to_list(OkCounts)))]),
+        orddict:update_counter(R, 1, Acc)
+    end, orddict:new(), OkResps),
+    MaxOk = lists:max([0 | element(2, lists:unzip(OkCounts))]),
     if
         MaxOk >= W -> true;
         length(Resps) >= Count -> true;
