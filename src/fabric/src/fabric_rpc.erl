@@ -406,7 +406,7 @@ get_node_seqs(Db, Nodes) ->
         end
     end,
     InitAcc = [{list_to_binary(atom_to_list(Node)), 0} || Node <- Nodes],
-    Opts = [{start_key, <<?LOCAL_DOC_PREFIX, "/purge-mem3-">>}],
+    Opts = [{start_key, <<?LOCAL_DOC_PREFIX, "purge-mem3-">>}],
     {ok, NodeBinSeqs} = couch_db:fold_local_docs(Db, FoldFun, InitAcc, Opts),
     [{list_to_existing_atom(binary_to_list(N)), S} || {N, S} <- NodeBinSeqs].
 
