@@ -65,9 +65,11 @@ columns(#idx{def=all_docs}) ->
     [<<"_id">>].
 
 
-is_usable(#idx{def=all_docs}, Selector, _) ->
+is_usable(#idx{def=all_docs}, _Selector, []) ->
+    true;
+is_usable(#idx{def=all_docs} = Idx, Selector, SortFields) ->
     Fields = mango_idx_view:indexable_fields(Selector),
-    lists:member(<<"_id">>, Fields).
+    lists:member(<<"_id">>, Fields) and maybe_filter_by_sort_fields(Idx, SortFields, Selector).
 
 
 start_key([{'$gt', Key, _, _}]) ->
@@ -100,6 +102,13 @@ end_key([{'$eq', Key, '$eq', Key}]) ->
     Key.
 
 
+% maybe_filter_by_sort_fields(Idx, SortFields, Selector) ->
+%     Cols = columns(Idx),
+%     io:format("HERE BOOM ~p ~n ~p ~n", [Idx, Cols]),
+%     lists:prefix(SortFields, Cols).
+
+maybe_filter_by_sort_fields(_Idx, [], _Selector) ->
+    true;
 maybe_filter_by_sort_fields(Idx, SortFields, _Selector) ->
-    Cols = mango_idx:columns(Idx),
+    Cols = columns(Idx),
     lists:prefix(SortFields, Cols).

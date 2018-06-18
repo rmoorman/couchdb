@@ -24,7 +24,6 @@
     columns/1,
     start_key/1,
     end_key/1,
-    maybe_filter_by_sort_fields/3,
 
     indexable_fields/1,
     field_ranges/1,
@@ -132,7 +131,8 @@ is_usable(Idx, Selector, SortFields) ->
         [<<"_id">>, <<"_rev">>]),
 
     mango_selector:has_required_fields(Selector, RequiredFields2)
-        andalso not is_text_search(Selector).
+        andalso not is_text_search(Selector)
+        andalso can_use_sort(RequiredFields, SortFields, Selector).
 
 
 is_text_search({[]}) ->
@@ -514,11 +514,12 @@ range_pos(Low, Arg, High) ->
     end.
 
 
-maybe_filter_by_sort_fields(Idx, SortFields, Selector) ->
-    Cols = mango_idx:columns(Idx),
+can_use_sort(_Cols, [], _Selector) ->
+    true;
+can_use_sort(Cols, SortFields, Selector) ->
     case lists:subtract(SortFields, Cols) of
         [] -> 
-            NormalizedSortFields = normalize_sort_fields(Cols, SortFields, Selector),
+            NormalizedSortFields = add_constant_sort_fields(Cols, SortFields, Selector),
             lists:prefix(NormalizedSortFields, Cols);
         _ ->
             false
@@ -526,7 +527,7 @@ maybe_filter_by_sort_fields(Idx, SortFields, Selector) ->
 
 
 % This is an user experience improvement. If a selector has a sort field set
-% then an index is only valid if the prefix of the sort fields match the 
+% then an index is only valid if the sort fields match the 
 % prefix of the index fields. 
 
 % e.g Index = [A, B, C] with Sort = [A, B] is a valid sort
@@ -541,7 +542,7 @@ maybe_filter_by_sort_fields(Idx, SortFields, Selector) ->
 % The sort will work as expected and this will increase the possibility
 % of the index being choosen. It also helps a user where they might not have
 % put correct initial fields in the sort.
-normalize_sort_fields(Cols, SortFields, Selector) ->
+add_constant_sort_fields(Cols, SortFields, Selector) ->
     lists:foldr(fun (Col, Sort) ->
         case lists:member(Col, SortFields) of
             true -> 

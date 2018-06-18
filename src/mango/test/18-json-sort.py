@@ -154,6 +154,20 @@ class JSONIndexSortOptimisations(mango.DbPerClass):
             resp = e.response.json()
             self.assertEqual(resp["error"], "no_usable_index")
 
+    def test_empty_sort(self):
+        self.db.create_index(["cars", "age", "name"], name="cars-age-name")
+        selector = {
+            "name": {
+                "$gt": "Eddie",
+            },
+            "age": 10,
+            "cars": {
+                "$gt": "1"
+            }
+        }
+        explain = self.db.find(selector, explain=True)
+        self.assertEqual(explain["index"]["name"], "cars-age-name")
+
     def test_in_between(self):
         self.db.create_index(["cars", "age", "name"], name="cars-age-name")
         selector = {

@@ -23,8 +23,7 @@
     to_json/1,
     columns/1,
     is_usable/3,
-    get_default_field_options/1,
-    maybe_filter_by_sort_fields/3
+    get_default_field_options/1
 ]).
 
 
@@ -375,16 +374,6 @@ maybe_reject_index_all_req({Def}, Db) ->
 
 forbid_index_all() ->
     config:get("mango", "index_all_disabled", "false").
-
-
-maybe_filter_by_sort_fields(Idx, SortFields, _Selector) ->
-    Cols = mango_idx:columns(Idx),
-    case Cols of
-        all_fields -> 
-            true;
-        _ ->
-            sets:is_subset(sets:from_list(SortFields), sets:from_list(Cols))
-    end.
 
 
 -ifdef(TEST).

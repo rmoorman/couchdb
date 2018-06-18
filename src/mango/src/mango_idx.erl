@@ -66,13 +66,12 @@ get_usable_indexes(Db, Selector, Opts) ->
 
     SortFields = get_sort_fields(Opts),
     UsableFilter = fun(I) -> is_usable(I, Selector, SortFields) end,
-    UsableIndexes1 = lists:filter(UsableFilter, UsableIndexes0),
 
-    case maybe_filter_by_sort_fields(UsableIndexes1, Selector, SortFields) of
-        {ok, SortIndexes} -> 
-            SortIndexes;
-        {error, no_usable_index} -> 
-            ?MANGO_ERROR({no_usable_index, missing_sort_index})
+    case lists:filter(UsableFilter, UsableIndexes0) of
+        [] -> 
+            ?MANGO_ERROR({no_usable_index, missing_sort_index});
+        UsableIndexes1 -> 
+            UsableIndexes1
     end.
 
 
@@ -97,22 +96,6 @@ get_sort_fields(Opts) ->
             mango_sort:fields(Sort);
         _ ->
             []
-    end.
-
-
-maybe_filter_by_sort_fields(Indexes, _Selector, []) ->
-    {ok, Indexes};
-
-maybe_filter_by_sort_fields(Indexes, Selector, SortFields) ->
-    FilterFun = fun(Idx) ->
-        Mod = idx_mod(Idx),
-        Mod:maybe_filter_by_sort_fields(Idx, SortFields, Selector)
-    end,
-    case lists:filter(FilterFun, Indexes) of
-        [] ->
-            {error, no_usable_index};
-        FilteredIndexes ->
-            {ok, FilteredIndexes}
     end.
 
 
