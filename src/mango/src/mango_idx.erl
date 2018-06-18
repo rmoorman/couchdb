@@ -70,8 +70,8 @@ get_usable_indexes(Db, Selector, Opts) ->
     case lists:filter(UsableFilter, UsableIndexes0) of
         [] -> 
             ?MANGO_ERROR({no_usable_index, missing_sort_index});
-        UsableIndexes1 -> 
-            UsableIndexes1
+        UsableIndexes -> 
+            UsableIndexes
     end.
 
 
