@@ -1015,7 +1015,7 @@ get_ddocs(<<"shards/", _/binary>> = DbName) ->
 get_ddocs(DbName) ->
     couch_util:with_db(DbName, fun(Db) ->
         FoldFun = fun(FDI, Acc) ->
-            Doc = couch_db:open_doc_int(Db, FDI, []),
+            {ok, Doc} = couch_db:open_doc_int(Db, FDI, []),
             {ok, [Doc | Acc]}
         end,
         {ok, Docs} = couch_db:fold_design_docs(Db, FoldFun, [], []),
