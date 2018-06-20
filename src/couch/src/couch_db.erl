@@ -476,7 +476,7 @@ purge_client_exists(DbName, DocId, Props) ->
 
     try
         CheckFun = get_purge_client_fun(DocId, Props),
-        Exists = CheckFun(DbName, DocId, Props),
+        Exists = CheckFun(Props),
         if not Exists -> ok; true ->
             Updated = couch_util:get_value(<<"updated_on">>, Props),
             if is_integer(Updated) and Updated > LagThreshold -> ok; true ->
