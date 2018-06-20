@@ -45,7 +45,7 @@
 
 get_local_purge_doc_id(Sig) ->
     Version = "v" ++ config:get("purge", "version", "1") ++ "-",
-    ?l2b(?LOCAL_DOC_PREFIX ++ "purge-" ++ Version ++ "mrview-" ++ Sig).
+    ?l2b(?LOCAL_DOC_PREFIX ++ "purge-mrview-" ++ Version ++ Sig).
 
 
 get_value_from_options(Key, Options) ->

@@ -96,7 +96,7 @@ save_local_doc(Db1, PurgeSeq, Mod, Fun) ->
     {Mega, Secs, _} = os:timestamp(),
     NowSecs = Mega * 1000000 + Secs,
     Doc = couch_doc:from_json_obj(?JSON_DECODE(?JSON_ENCODE({[
-        {<<"_id">>, <<"_local/purge-test-stuff">>},
+        {<<"_id">>, <<"_local/purge-test-stuff-v1">>},
         {<<"purge_seq">>, PurgeSeq},
         {<<"timestamp_utc">>, NowSecs},
         {<<"verify_module">>, Mod},

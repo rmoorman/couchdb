@@ -470,7 +470,8 @@ db_docs_as_term(Db) ->
 db_local_docs_as_term(Db, Type) ->
     FoldFun = fun(Doc, Acc) ->
         case Doc#doc.id of
-            <<"_local/purge-mem3-", _/binary>> when Type == replication ->
+            <<?LOCAL_DOC_PREFIX, "purge-mem3", _/binary>>
+                when Type == replication ->
                 {ok, Acc};
             _ ->
                 {ok, [Doc | Acc]}

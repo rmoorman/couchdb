@@ -436,8 +436,10 @@ get_minimum_purge_seq(#db{} = Db) ->
                     _ ->
                         % If there's a broken doc we have to keep every
                         % purge info until the doc is fixed or removed.
-                        Fmt = "Invalid purge doc '~s' with purge_seq '~w'",
-                        couch_log:error(Fmt, [DocId, ClientSeq]),
+                        Fmt = "Invalid purge doc '~s' on database ~p
+                            with purge_seq '~w'",
+                        DbName = couch_db:name(Db),
+                        couch_log:error(Fmt, [DocId, DbName, ClientSeq]),
                         {ok, erlang:min(OldestPurgeSeq, SeqAcc)}
                 end;
             _ ->
@@ -479,14 +481,17 @@ purge_client_exists(DbName, DocId, Props) ->
             Updated = couch_util:get_value(<<"updated_on">>, Props),
             if is_integer(Updated) and Updated > LagThreshold -> ok; true ->
                 Diff = NowSecs - Updated,
-                Fmt = "Purge checkpoint '~s' not updated in ~p seconds",
-                couch_log:error(Fmt, [DocId, Diff])
+                Fmt1 = "Purge checkpoint '~s' not updated in ~p seconds",
+                couch_log:error(Fmt1, [DocId, Diff])
             end
         end,
         Exists
     catch _:_ ->
         % If we fail to check for a client we have to assume that
         % it exists.
+        Fmt2 = "Failed to check purge checkpoint using
+            document '~p' on database ~p",
+        couch_log:error(Fmt2, [DbName, DocId]),
         true
     end.
 
@@ -504,9 +509,9 @@ get_purge_client_fun(DocId, Props) ->
     F0 = couch_util:get_value(<<"verify_function">>, Props),
     try
         F = binary_to_existing_atom(F0, latin1),
-        case erlang:function_exported(M, F, 2) of
+        case erlang:function_exported(M, F, 1) of
             true ->
-                fun M:F/2;
+                fun M:F/1;
             false ->
                 Fmt2 = "Missing exported function '~p' in '~p'
                     for purge checkpoint '~s'",

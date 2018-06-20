@@ -188,6 +188,7 @@ repl(Source, Target) ->
 
     SrcTerm = cpse_util:db_as_term(Source, replication),
     TgtTerm = cpse_util:db_as_term(Target, replication),
+
     Diff = cpse_util:term_diff(SrcTerm, TgtTerm),
     ?assertEqual(nodiff, Diff).
 

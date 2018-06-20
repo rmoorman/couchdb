@@ -18,7 +18,7 @@
     go/3,
     make_local_id/2,
     make_purge_id/2,
-    verify_purge_checkpoint/3,
+    verify_purge_checkpoint/1,
     find_source_seq/4
 ]).
 
@@ -122,10 +122,12 @@ make_local_id(SourceThing, TargetThing, Filter) ->
 
 
 make_purge_id(SourceUUID, TargetUUID) ->
-    <<"_local/purge-mem3-", SourceUUID/binary, "-", TargetUUID/binary>>.
+    Version = "v" ++ config:get("purge", "version", "1") ++ "-",
+    ?l2b(?LOCAL_DOC_PREFIX ++ "purge-mem3-" ++ Version ++
+        ?b2l(SourceUUID) ++ "-" ++ ?b2l(TargetUUID)).
 
 
-verify_purge_checkpoint(_Db, _DocId, Props) ->
+verify_purge_checkpoint(Props) ->
     DbName = couch_util:get_value(<<"dbname">>, Props),
     SourceBin = couch_util:get_value(<<"source">>, Props),
     TargetBin = couch_util:get_value(<<"target">>, Props),
