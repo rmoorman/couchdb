@@ -13,8 +13,13 @@
 -module(couch_index_plugin_couch_db).
 
 -export([
+    is_valid_purge_client/1,
     on_compact/2
 ]).
+
+
+is_valid_purge_client(Props) ->
+    couch_mrview_index:verify_index_exists(Props).
 
 
 on_compact(DbName, DDocs) ->

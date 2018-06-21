@@ -220,46 +220,48 @@ index_file_exists(State) ->
 
 
 verify_index_exists(Props) ->
-    ShardDbName = couch_mrview_util:get_value_from_options(
-        <<"dbname">>,
-        Props
-    ),
-    DDocId = couch_mrview_util:get_value_from_options(
-        <<"ddoc_id">>,
-        Props
-    ),
-    SigInLocal = couch_mrview_util:get_value_from_options(
-        <<"signature">>,
-        Props
-    ),
-    case couch_db:open_int(ShardDbName, []) of
-        {ok, Db} ->
-            try
-                DbName = mem3:dbname(couch_db:name(Db)),
-                case ddoc_cache:open(DbName, DDocId) of
-                    {ok, DDoc} ->
+    try
+        Type = couch_util:get_value(<<"type">>, Props),
+        if Type =/= <<"mrview">> -> false; true ->
+            DbName = couch_util:get_value(<<"dbname">>, Props),
+            DDocId = couch_util:get_value(<<"ddoc_id">>, Props),
+            couch_util:with_db(DbName, fun(Db) ->
+                {ok, DesignDocs} = couch_db:get_design_docs(Db),
+                case get_ddoc(DbName, DesignDocs, DDocId) of
+                    #doc{} = DDoc ->
                         {ok, IdxState} = couch_mrview_util:ddoc_to_mrst(
-                            ShardDbName,
-                            DDoc
-                        ),
+                            DbName, DDoc),
                         IdxSig = IdxState#mrst.sig,
+                        SigInLocal = couch_util:get_value(
+                            <<"signature">>, Props),
                         couch_index_util:hexsig(IdxSig) == SigInLocal;
-                    _Else ->
+                    not_found ->
                         false
                 end
-            catch E:T ->
-                Stack = erlang:get_stacktrace(),
-                couch_log:error(
-                    "Error occurs when verifying existence of ~s/~s :: ~p ~p",
-                    [ShardDbName, DDocId, {E, T}, Stack]
-                ),
-                false
-            after
-                catch couch_db:close(Db)
-            end;
-        _ ->
-            false
+            end)
+        end
+    catch _:_ ->
+        false
     end.
+
+
+get_ddoc(<<"shards/", _/binary>> = _DbName, DesignDocs, DDocId) ->
+    DDocs = [couch_doc:from_json_obj(DD) || DD <- DesignDocs],
+    case lists:keyfind(DDocId, #doc.id, DDocs) of
+        #doc{} = DDoc -> DDoc;
+        false -> not_found
+    end;
+get_ddoc(DbName, DesignDocs, DDocId) ->
+    couch_util:with_db(DbName, fun(Db) ->
+        case lists:keyfind(DDocId, #full_doc_info.id, DesignDocs) of
+            #full_doc_info{} = DDocInfo ->
+                {ok, DDoc} = couch_db:open_doc_int(
+                    Db, DDocInfo, [ejson_body]),
+                    DDoc;
+            false ->
+                not_found
+        end
+    end).
 
 
 ensure_local_purge_docs(DbName, DDocs) ->
@@ -305,8 +307,6 @@ update_local_purge_doc(Db, State, PSeq) ->
         {<<"type">>, <<"mrview">>},
         {<<"purge_seq">>, PSeq},
         {<<"updated_on">>, NowSecs},
-        {<<"verify_module">>, <<"couch_mrview_index">>},
-        {<<"verify_function">>, <<"verify_index_exists">>},
         {<<"dbname">>, get(db_name, State)},
         {<<"ddoc_id">>, get(idx_name, State)},
         {<<"signature">>, Sig}

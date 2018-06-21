@@ -361,20 +361,19 @@ test_purge_compact_for_stale_purge_cp_with_client(Db) ->
         couch_db:set_purge_infos_limit(Db1, PurgedDocsLimit),
         _Result = run_query(Db1, []),
 
-        % purge 150 documents
-        PurgedDocsNum = 150,
+        % first purge 30 documents
+        PurgedDocsNum1 = 30,
         IdsRevs = lists:foldl(fun(Id, CIdRevs) ->
             Id1 = docid(Id),
             FDI1 = couch_db:get_full_doc_info(Db1, Id1),
             Rev1 = get_rev(FDI1),
             UUID1 = uuid(Id),
             [{UUID1, Id1, [Rev1]} | CIdRevs]
-        end, [], lists:seq(1, PurgedDocsNum)),
+        end, [], lists:seq(1, PurgedDocsNum1)),
         {ok, _} = couch_db:purge_docs(Db1, IdsRevs),
 
-        % run query again to reflect purge requests
-        % to mrview
         {ok, Db2} = couch_db:reopen(Db1),
+        % run query again to reflect purge request to mrview
         _Result1 = run_query(Db2, []),
         {ok, PurgedIdRevs} = couch_db:fold_purge_infos(
                 Db2,
@@ -383,9 +382,21 @@ test_purge_compact_for_stale_purge_cp_with_client(Db) ->
                 [],
                 []
             ),
-        ?assertEqual(PurgedDocsNum, length(PurgedIdRevs)),
+        ?assertEqual(PurgedDocsNum1, length(PurgedIdRevs)),
+
+        % then purge 120 documents
+        PurgedDocsNum2 = 150,
+        IdsRevs2 = lists:foldl(fun(Id, CIdRevs) ->
+            Id1 = docid(Id),
+            FDI1 = couch_db:get_full_doc_info(Db1, Id1),
+            Rev1 = get_rev(FDI1),
+            UUID1 = uuid(Id),
+            [{UUID1, Id1, [Rev1]} | CIdRevs]
+        end, [], lists:seq(PurgedDocsNum1 + 1, PurgedDocsNum2)),
+        {ok, _} = couch_db:purge_docs(Db2, IdsRevs2),
 
         % run compaction to trigger pruning of purge tree
+        % only the first 30 purge requests are pruned
         {ok, Db3} = couch_db:open_int(DbName, []),
         {ok, _CompactPid} = couch_db:start_compact(Db3),
         wait_compaction(DbName, "database", ?LINE),
@@ -401,7 +412,7 @@ test_purge_compact_for_stale_purge_cp_with_client(Db) ->
                 [],
                 []
             ),
-        ?assertEqual(PurgedDocsLimit, length(PurgedIdRevs2))
+        ?assertEqual(PurgedDocsNum2 - PurgedDocsNum1, length(PurgedIdRevs2))
     end).
 
 

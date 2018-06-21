@@ -31,7 +31,7 @@ setup() ->
 
 
 teardown(DbName) ->
-    meck:unload(couch_mrview_index),
+    meck:unload(),
     ok = fabric:delete_db(DbName, [?ADMIN_CTX]).
 
 

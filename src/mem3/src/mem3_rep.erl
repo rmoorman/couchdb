@@ -122,32 +122,37 @@ make_local_id(SourceThing, TargetThing, Filter) ->
 
 
 make_purge_id(SourceUUID, TargetUUID) ->
-    Version = "v" ++ config:get("purge", "version", "1") ++ "-",
-    ?l2b(?LOCAL_DOC_PREFIX ++ "purge-mem3-" ++ Version ++
-        ?b2l(SourceUUID) ++ "-" ++ ?b2l(TargetUUID)).
+    <<"_local/purge-mem3-", SourceUUID/binary, "-", TargetUUID/binary>>.
 
 
 verify_purge_checkpoint(Props) ->
-    DbName = couch_util:get_value(<<"dbname">>, Props),
-    SourceBin = couch_util:get_value(<<"source">>, Props),
-    TargetBin = couch_util:get_value(<<"target">>, Props),
-    Range = couch_util:get_value(<<"range">>, Props),
-
-    Source = binary_to_existing_atom(SourceBin, latin1),
-    Target = binary_to_existing_atom(TargetBin, latin1),
-
     try
-        Shards = mem3:shards(DbName),
-        Nodes = lists:foldl(fun(Shard, Acc) ->
-            case Shard#shard.range == Range of
-                true -> [Shard#shard.node | Acc];
-                false -> Acc
+        Type = couch_util:get_value(<<"type">>, Props),
+        if Type =/= <<"internal_replication">> -> false; true ->
+            DbName = couch_util:get_value(<<"dbname">>, Props),
+            SourceBin = couch_util:get_value(<<"source">>, Props),
+            TargetBin = couch_util:get_value(<<"target">>, Props),
+            Range = couch_util:get_value(<<"range">>, Props),
+
+            Source = binary_to_existing_atom(SourceBin, latin1),
+            Target = binary_to_existing_atom(TargetBin, latin1),
+
+            try
+                Shards = mem3:shards(DbName),
+                Nodes = lists:foldl(fun(Shard, Acc) ->
+                    case Shard#shard.range == Range of
+                        true -> [Shard#shard.node | Acc];
+                        false -> Acc
+                    end
+                end, [], mem3:shards(DbName)),
+                lists:member(Source, Nodes) andalso lists:member(Target, Nodes)
+            catch
+                error:database_does_not_exist ->
+                    false
             end
-        end, [], mem3:shards(DbName)),
-        lists:member(Source, Nodes) andalso lists:member(Target, Nodes)
-    catch
-        error:database_does_not_exist ->
-            false
+        end
+    catch _:_ ->
+        false
     end.
 
 
@@ -500,8 +505,6 @@ purge_cp_body(#acc{} = Acc, PurgeSeq) ->
         {<<"type">>, <<"internal_replication">>},
         {<<"updated_on">>, NowSecs},
         {<<"purge_seq">>, PurgeSeq},
-        {<<"verify_module">>, <<"mem3_rep">>},
-        {<<"verify_function">>, <<"verify_purge_checkpoint">>},
         {<<"dbname">>, Source#shard.dbname},
         {<<"source">>, atom_to_binary(Source#shard.node, latin1)},
         {<<"target">>, atom_to_binary(Target#shard.node, latin1)},

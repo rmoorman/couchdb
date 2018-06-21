@@ -37,10 +37,10 @@ setup() ->
 
 
 teardown({Ctx, Paths}) ->
+    test_util:stop_couch(Ctx),
     lists:foreach(fun(Path) ->
         file:delete(Path)
-    end, Paths),
-    test_util:stop_couch(Ctx).
+    end, Paths).
 
 
 upgrade_test_() ->

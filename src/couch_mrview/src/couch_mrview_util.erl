@@ -44,14 +44,13 @@
 
 
 get_local_purge_doc_id(Sig) ->
-    Version = "v" ++ config:get("purge", "version", "1") ++ "-",
-    ?l2b(?LOCAL_DOC_PREFIX ++ "purge-mrview-" ++ Version ++ Sig).
+    ?l2b(?LOCAL_DOC_PREFIX ++ "purge-mrview-" ++ Sig).
 
 
 get_value_from_options(Key, Options) ->
     case couch_util:get_value(Key, Options) of
         undefined ->
-            Reason = binary_to_list(Key) ++ " must exist in Options.",
+            Reason = <<"'", Key/binary, "' must exists in options.">>,
             throw({bad_request, Reason});
         Value -> Value
     end.

@@ -81,7 +81,6 @@
 
     get_minimum_purge_seq/1,
     purge_client_exists/3,
-    get_purge_client_fun/2,
 
     update_doc/3,
     update_doc/4,
@@ -475,8 +474,7 @@ purge_client_exists(DbName, DocId, Props) ->
     LagThreshold = NowSecs - LagWindow,
 
     try
-        CheckFun = get_purge_client_fun(DocId, Props),
-        Exists = CheckFun(Props),
+        Exists = couch_db_plugin:is_valid_purge_client(Props),
         if not Exists -> ok; true ->
             Updated = couch_util:get_value(<<"updated_on">>, Props),
             if is_integer(Updated) and Updated > LagThreshold -> ok; true ->
@@ -490,38 +488,9 @@ purge_client_exists(DbName, DocId, Props) ->
         % If we fail to check for a client we have to assume that
         % it exists.
         Fmt2 = "Failed to check purge checkpoint using
-            document '~p' on database ~p",
+            document '~p' in database ~p",
         couch_log:error(Fmt2, [DbName, DocId]),
         true
-    end.
-
-
-get_purge_client_fun(DocId, Props) ->
-    M0 = couch_util:get_value(<<"verify_module">>, Props),
-    M = try
-        binary_to_existing_atom(M0, latin1)
-    catch error:badarg ->
-        Fmt1 = "Missing index module '~p' for purge checkpoint '~s'",
-        couch_log:error(Fmt1, [M0, DocId]),
-        throw(failed)
-    end,
-
-    F0 = couch_util:get_value(<<"verify_function">>, Props),
-    try
-        F = binary_to_existing_atom(F0, latin1),
-        case erlang:function_exported(M, F, 1) of
-            true ->
-                fun M:F/1;
-            false ->
-                Fmt2 = "Missing exported function '~p' in '~p'
-                    for purge checkpoint '~s'",
-                couch_log:error(Fmt2, [F0, M0, DocId]),
-                throw(failed)
-        end
-    catch error:badarg ->
-        Fmt3 = "Missing function '~p' in '~p' for purge checkpoint '~s'",
-        couch_log:error(Fmt3, [F0, M0, DocId]),
-        throw(failed)
     end.
 
 
@@ -634,7 +603,8 @@ get_db_info(Db) ->
     ],
     {ok, InfoList}.
 
-get_design_docs(#db{name = <<"shards/", _:18/binary, DbName/binary>>}) ->
+get_design_docs(#db{name = <<"shards/", _:18/binary, DbFullName/binary>>}) ->
+    DbName = ?l2b(filename:rootname(filename:basename(?b2l(DbFullName)))),
     {_, Ref} = spawn_monitor(fun() -> exit(fabric:design_docs(DbName)) end),
     receive {'DOWN', Ref, _, _, Response} ->
         Response
@@ -643,7 +613,6 @@ get_design_docs(#db{} = Db) ->
     FoldFun = fun(FDI, Acc) -> {ok, [FDI | Acc]} end,
     {ok, Docs} = fold_design_docs(Db, FoldFun, [], []),
     {ok, lists:reverse(Docs)}.
-
 
 check_is_admin(#db{user_ctx=UserCtx}=Db) ->
     case is_admin(Db) of

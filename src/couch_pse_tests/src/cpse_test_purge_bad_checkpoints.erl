@@ -48,7 +48,7 @@ teardown_each(Db) ->
 
 
 cpse_bad_purge_seq(Db1) ->
-    Db2 = save_local_doc(Db1, <<"foo">>, ?MODULE, valid_fun),
+    Db2 = save_local_doc(Db1, <<"foo">>),
     ?assertEqual(0, couch_db:get_minimum_purge_seq(Db2)),
 
     ok = couch_db:set_purge_infos_limit(Db2, 5),
@@ -56,66 +56,25 @@ cpse_bad_purge_seq(Db1) ->
     ?assertEqual(1, couch_db:get_minimum_purge_seq(Db3)).
 
 
-cpse_bad_verify_mod(Db1) ->
-    Db2 = save_local_doc(Db1, 2, [invalid_module], valid_fun),
-    ?assertEqual(0, couch_db:get_minimum_purge_seq(Db2)),
-
-    ok = couch_db:set_purge_infos_limit(Db2, 5),
-    {ok, Db3} = couch_db:reopen(Db2),
-    ?assertEqual(2, couch_db:get_minimum_purge_seq(Db3)).
-
-
-cpse_bad_verify_fun(Db1) ->
-    Db2 = save_local_doc(Db1, 2, ?MODULE, [invalid_function]),
-    ?assertEqual(0, couch_db:get_minimum_purge_seq(Db2)),
-
-    ok = couch_db:set_purge_infos_limit(Db2, 5),
-    {ok, Db3} = couch_db:reopen(Db2),
-    ?assertEqual(2, couch_db:get_minimum_purge_seq(Db3)).
-
-
-cpse_verify_fun_throws(Db1) ->
-    Db2 = save_local_doc(Db1, 2, ?MODULE, throw_fun),
-    ?assertEqual(0, couch_db:get_minimum_purge_seq(Db2)),
-
-    ok = couch_db:set_purge_infos_limit(Db2, 5),
-    {ok, Db3} = couch_db:reopen(Db2),
-    ?assertEqual(2, couch_db:get_minimum_purge_seq(Db3)).
-
-
 cpse_verify_non_boolean(Db1) ->
-    Db2 = save_local_doc(Db1, 2, ?MODULE, non_bool_fun),
+    Db2 = save_local_doc(Db1, 2),
     ?assertEqual(0, couch_db:get_minimum_purge_seq(Db2)),
 
     ok = couch_db:set_purge_infos_limit(Db2, 5),
     {ok, Db3} = couch_db:reopen(Db2),
-    ?assertEqual(2, couch_db:get_minimum_purge_seq(Db3)).
+    ?assertEqual(5, couch_db:get_minimum_purge_seq(Db3)).
 
 
-save_local_doc(Db1, PurgeSeq, Mod, Fun) ->
+save_local_doc(Db1, PurgeSeq) ->
     {Mega, Secs, _} = os:timestamp(),
     NowSecs = Mega * 1000000 + Secs,
     Doc = couch_doc:from_json_obj(?JSON_DECODE(?JSON_ENCODE({[
-        {<<"_id">>, <<"_local/purge-test-stuff-v1">>},
+        {<<"_id">>, <<"_local/purge-test-stuff">>},
         {<<"purge_seq">>, PurgeSeq},
         {<<"timestamp_utc">>, NowSecs},
-        {<<"verify_module">>, Mod},
-        {<<"verify_function">>, Fun},
         {<<"verify_options">>, {[{<<"signature">>, <<"stuff">>}]}},
         {<<"type">>, <<"test">>}
     ]}))),
     {ok, _} = couch_db:update_doc(Db1, Doc, []),
     {ok, Db2} = couch_db:reopen(Db1),
     Db2.
-
-
-valid_fun(_Options) ->
-    true.
-
-
-throw_fun(_Options) ->
-    throw(failed).
-
-
-not_bool(_Options) ->
-    ok.
