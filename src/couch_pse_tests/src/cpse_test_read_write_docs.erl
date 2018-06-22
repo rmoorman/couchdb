@@ -27,7 +27,7 @@ teardown_each(Db) ->
     ok = couch_server:delete(couch_db:name(Db), []).
 
 
-cpse_read_empty_docs(Db) ->
+cpse_read_docs_from_empty_db(Db) ->
     ?assertEqual([not_found], couch_db_engine:open_docs(Db, [<<"foo">>])),
     ?assertEqual(
         [not_found, not_found],
