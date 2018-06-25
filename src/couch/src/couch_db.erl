@@ -474,7 +474,7 @@ purge_client_exists(DbName, DocId, Props) ->
     LagThreshold = NowSecs - LagWindow,
 
     try
-        Exists = couch_db_plugin:is_valid_purge_client(Props),
+        Exists = couch_db_plugin:is_valid_purge_client(DbName, Props),
         if not Exists -> ok; true ->
             Updated = couch_util:get_value(<<"updated_on">>, Props),
             if is_integer(Updated) and Updated > LagThreshold -> ok; true ->

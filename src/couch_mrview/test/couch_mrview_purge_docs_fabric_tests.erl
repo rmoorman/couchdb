@@ -78,7 +78,10 @@ test_purge_verify_index(DbName) ->
 
         {ok, #doc{body = {Props1}}} = get_local_purge_doc(DbName),
         ?assertEqual(0, couch_util:get_value(<<"purge_seq">>, Props1)),
-        ?assertEqual(true, couch_mrview_index:verify_index_exists(Props1)),
+        ShardNames = [Sh || #shard{name = Sh} <- mem3:local_shards(DbName)],
+        [ShardDbName | _Rest ] = ShardNames,
+        ?assertEqual(true, couch_mrview_index:verify_index_exists(
+            ShardDbName, Props1)),
 
         purge_docs(DbName, [<<"1">>]),
 
@@ -94,7 +97,8 @@ test_purge_verify_index(DbName) ->
 
         {ok, #doc{body = {Props2}}} = get_local_purge_doc(DbName),
         ?assertEqual(1, couch_util:get_value(<<"purge_seq">>, Props2)),
-        ?assertEqual(true, couch_mrview_index:verify_index_exists(Props2))
+        ?assertEqual(true, couch_mrview_index:verify_index_exists(
+            ShardDbName, Props2))
     end).
 
 

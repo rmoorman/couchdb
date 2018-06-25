@@ -18,7 +18,7 @@
     go/3,
     make_local_id/2,
     make_purge_id/2,
-    verify_purge_checkpoint/1,
+    verify_purge_checkpoint/2,
     find_source_seq/4
 ]).
 
@@ -125,11 +125,10 @@ make_purge_id(SourceUUID, TargetUUID) ->
     <<"_local/purge-mem3-", SourceUUID/binary, "-", TargetUUID/binary>>.
 
 
-verify_purge_checkpoint(Props) ->
+verify_purge_checkpoint(DbName, Props) ->
     try
         Type = couch_util:get_value(<<"type">>, Props),
         if Type =/= <<"internal_replication">> -> false; true ->
-            DbName = couch_util:get_value(<<"dbname">>, Props),
             SourceBin = couch_util:get_value(<<"source">>, Props),
             TargetBin = couch_util:get_value(<<"target">>, Props),
             Range = couch_util:get_value(<<"range">>, Props),
@@ -249,8 +248,9 @@ pull_purges(#acc{} = Acc0) ->
         end,
 
         if Remaining =< 0 -> ok; true ->
-            OldestPurgeSeq = couch_db:get_oldest_purge_seq(Db),
-            PurgesToPush = couch_db:get_purge_seq(Db) - OldestPurgeSeq,
+            {ok, PurgeSeq} = couch_db:get_purge_seq(Db),
+            {ok, OldestPurgeSeq} = couch_db:get_oldest_purge_seq(Db),
+            PurgesToPush = PurgeSeq - OldestPurgeSeq,
             Changes = couch_db:count_changes_since(Db, UpdateSeq),
             throw({finished, Remaining + PurgesToPush + Changes})
         end,
@@ -505,7 +505,6 @@ purge_cp_body(#acc{} = Acc, PurgeSeq) ->
         {<<"type">>, <<"internal_replication">>},
         {<<"updated_on">>, NowSecs},
         {<<"purge_seq">>, PurgeSeq},
-        {<<"dbname">>, Source#shard.dbname},
         {<<"source">>, atom_to_binary(Source#shard.node, latin1)},
         {<<"target">>, atom_to_binary(Target#shard.node, latin1)},
         {<<"range">>, Source#shard.range}

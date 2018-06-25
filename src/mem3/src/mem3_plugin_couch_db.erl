@@ -13,9 +13,9 @@
 -module(mem3_plugin_couch_db).
 
 -export([
-    is_valid_purge_client/1
+    is_valid_purge_client/2
 ]).
 
 
-is_valid_purge_client(Props) ->
-    mem3_rep:verify_purge_checkpoint(Props).
+is_valid_purge_client(DbName, Props) ->
+    mem3_rep:verify_purge_checkpoint(DbName, Props).

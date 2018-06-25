@@ -18,7 +18,7 @@
 -export([start_update/4, purge/4, process_doc/3, finish_update/1, commit/1]).
 -export([compact/3, swap_compacted/2, remove_compacted/1]).
 -export([index_file_exists/1]).
--export([update_local_purge_doc/2, verify_index_exists/1]).
+-export([update_local_purge_doc/2, verify_index_exists/2]).
 -export([ensure_local_purge_docs/2]).
 
 -include_lib("couch/include/couch_db.hrl").
@@ -219,11 +219,10 @@ index_file_exists(State) ->
     filelib:is_file(IndexFName).
 
 
-verify_index_exists(Props) ->
+verify_index_exists(DbName, Props) ->
     try
         Type = couch_util:get_value(<<"type">>, Props),
         if Type =/= <<"mrview">> -> false; true ->
-            DbName = couch_util:get_value(<<"dbname">>, Props),
             DDocId = couch_util:get_value(<<"ddoc_id">>, Props),
             couch_util:with_db(DbName, fun(Db) ->
                 {ok, DesignDocs} = couch_db:get_design_docs(Db),
@@ -307,7 +306,6 @@ update_local_purge_doc(Db, State, PSeq) ->
         {<<"type">>, <<"mrview">>},
         {<<"purge_seq">>, PSeq},
         {<<"updated_on">>, NowSecs},
-        {<<"dbname">>, get(db_name, State)},
         {<<"ddoc_id">>, get(idx_name, State)},
         {<<"signature">>, Sig}
     ]}),
