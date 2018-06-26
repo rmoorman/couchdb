@@ -502,6 +502,19 @@ db_req(#httpd{method='POST',path_parts=[_,<<"_purge">>]}=Req, Db) ->
     Options = [{user_ctx, Req#httpd.user_ctx}, {w, W}],
     {IdsRevs} = chttpd:json_body_obj(Req),
     IdsRevs2 = [{Id, couch_doc:parse_revs(Revs)} || {Id, Revs} <- IdsRevs],
+    MaxIds = config:get_integer("purge", "max_document_id_number", 100),
+    case length(IdsRevs2) =< MaxIds of
+        false -> throw({bad_request, "Document numbers larger than expected"});
+        true -> ok
+    end,
+    RevsLen = lists:foldl(fun({_Id, Revs}, Acc) ->
+        length(Revs) + Acc
+    end, 0, IdsRevs2),
+    MaxRevs = config:get_integer("purge", "max_revisions_number", 1000),
+    case RevsLen =< MaxRevs of
+        false -> throw({bad_request, "Document revs larger than expected"});
+        true -> ok
+    end,
     {ok, Results} = fabric:purge_docs(Db, IdsRevs2, Options),
     {Code, Json} = purge_results_to_json(IdsRevs2, Results),
     send_json(Req, Code, {[{<<"purge_seq">>, null}, {<<"purged">>, {Json}}]});

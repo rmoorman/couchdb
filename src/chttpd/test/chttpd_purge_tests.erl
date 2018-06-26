@@ -72,6 +72,7 @@ purge_test_() ->
                     fun test_ok_purge_request/1,
                     fun test_partial_purge_request/1,
                     fun test_mixed_purge_request/1,
+                    fun test_overmany_ids_or_revs_purge_request/1,
                     fun test_exceed_limits_on_purge_infos/1,
                     fun should_error_set_purged_docs_limit_to0/1
                 ]
@@ -190,7 +191,7 @@ test_mixed_purge_request(Url) ->
 
         IdsRevsEJson = {[
             {<<"doc1">>, [Rev1]},  % partial purge
-            {<<"doc2">>, [Rev3]},  % correct format, but invalid rev
+            {<<"doc2">>, [Rev3, Rev1]},  % correct format, but invalid rev
             {<<"doc3">>, [Rev3]}   % correct format and rev
         ]},
         IdsRevs = binary_to_list(?JSON_ENCODE(IdsRevsEJson)),
@@ -215,6 +216,56 @@ test_mixed_purge_request(Url) ->
         Content = couch_util:get_value(<<"content">>, Json5, undefined),
         ?assertEqual(<<"updated">>, Content),
         ?assert(Status2 =:= 200)
+    end).
+
+
+test_overmany_ids_or_revs_purge_request(Url) ->
+    ?_test(begin
+        {ok, _, _, Body} = create_doc(Url, "doc1"),
+        {Json} = ?JSON_DECODE(Body),
+        Rev1 = couch_util:get_value(<<"rev">>, Json, undefined),
+
+        NewDoc = "{\"new_edits\": false, \"docs\": [{\"_id\": \"doc1\",
+            \"_revisions\": {\"start\": 1, \"ids\": [\"12345\", \"67890\"]},
+            \"content\": \"updated\", \"_rev\": \"" ++ ?b2l(Rev1) ++ "\"}]}",
+        {ok, _, _, _} = test_request:post(Url ++ "/_bulk_docs/",
+            [?CONTENT_JSON, ?AUTH], NewDoc),
+
+        {ok, _, _, _Body2} = create_doc(Url, "doc2", "content2"),
+        {ok, _, _, Body3} = create_doc(Url, "doc3", "content3"),
+        {Json3} = ?JSON_DECODE(Body3),
+        Rev3 = couch_util:get_value(<<"rev">>, Json3, undefined),
+
+        IdsRevsEJson = {[
+            {<<"doc1">>, [Rev1]},  % partial purge
+            {<<"doc2">>, [Rev3, Rev1]},  % correct format, but invalid rev
+            {<<"doc3">>, [Rev3]}   % correct format and rev
+        ]},
+        IdsRevs = binary_to_list(?JSON_ENCODE(IdsRevsEJson)),
+
+        % Ids larger than expected
+        config:set("purge", "max_document_id_number", "1"),
+        {ok, Status, _, Body4} = test_request:post(Url ++ "/_purge/",
+            [?CONTENT_JSON, ?AUTH], IdsRevs),
+        config:delete("purge", "max_document_id_number"),
+        ResultJson = ?JSON_DECODE(Body4),
+        ?assertEqual(400, Status),
+        ?assertMatch({[
+            {<<"error">>,<<"bad_request">>},
+            {<<"reason">>,<<"Document numbers larger than expected">>}]},
+            ResultJson),
+
+        % Revs larger than expected
+        config:set("purge", "max_revisions_number", "1"),
+        {ok, Status2, _, Body5} = test_request:post(Url ++ "/_purge/",
+            [?CONTENT_JSON, ?AUTH], IdsRevs),
+        config:delete("purge", "max_revisions_number"),
+        ResultJson2 = ?JSON_DECODE(Body5),
+        ?assertEqual(400, Status2),
+        ?assertMatch({[
+            {<<"error">>,<<"bad_request">>},
+            {<<"reason">>,<<"Document revs larger than expected">>}]},
+            ResultJson2)
     end).
 
 
