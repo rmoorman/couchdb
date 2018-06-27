@@ -504,7 +504,7 @@ db_req(#httpd{method='POST',path_parts=[_,<<"_purge">>]}=Req, Db) ->
     IdsRevs2 = [{Id, couch_doc:parse_revs(Revs)} || {Id, Revs} <- IdsRevs],
     MaxIds = config:get_integer("purge", "max_document_id_number", 100),
     case length(IdsRevs2) =< MaxIds of
-        false -> throw({bad_request, "Document numbers larger than expected"});
+        false -> throw({bad_request, "Exceeded maximum number of documents."});
         true -> ok
     end,
     RevsLen = lists:foldl(fun({_Id, Revs}, Acc) ->
@@ -512,7 +512,7 @@ db_req(#httpd{method='POST',path_parts=[_,<<"_purge">>]}=Req, Db) ->
     end, 0, IdsRevs2),
     MaxRevs = config:get_integer("purge", "max_revisions_number", 1000),
     case RevsLen =< MaxRevs of
-        false -> throw({bad_request, "Document revs larger than expected"});
+        false -> throw({bad_request, "Exceeded maximum number of revisions."});
         true -> ok
     end,
     {ok, Results} = fabric:purge_docs(Db, IdsRevs2, Options),

@@ -252,7 +252,7 @@ test_overmany_ids_or_revs_purge_request(Url) ->
         ?assertEqual(400, Status),
         ?assertMatch({[
             {<<"error">>,<<"bad_request">>},
-            {<<"reason">>,<<"Document numbers larger than expected">>}]},
+            {<<"reason">>,<<"Exceeded maximum number of documents.">>}]},
             ResultJson),
 
         % Revs larger than expected
@@ -264,7 +264,7 @@ test_overmany_ids_or_revs_purge_request(Url) ->
         ?assertEqual(400, Status2),
         ?assertMatch({[
             {<<"error">>,<<"bad_request">>},
-            {<<"reason">>,<<"Document revs larger than expected">>}]},
+            {<<"reason">>,<<"Exceeded maximum number of revisions.">>}]},
             ResultJson2)
     end).
 
