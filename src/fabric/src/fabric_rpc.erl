@@ -349,7 +349,7 @@ read_repair_filter(Db, Docs, NodeRevs) ->
     Nodes = lists:usort([Node || {Node, _} <- NodeRevs, Node /= node()]),
     NodeSeqs = get_node_seqs(Db, Nodes),
 
-    {ok, DbPSeq} = couch_db:get_purge_seq(Db),
+    DbPSeq = couch_db:get_purge_seq(Db),
     Lag = config:get_integer("couchdb", "read_repair_lag", 100),
 
     % Filter out read-repair updates from any node that is

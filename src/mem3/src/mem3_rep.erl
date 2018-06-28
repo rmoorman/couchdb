@@ -248,8 +248,8 @@ pull_purges(#acc{} = Acc0) ->
         end,
 
         if Remaining =< 0 -> ok; true ->
-            {ok, PurgeSeq} = couch_db:get_purge_seq(Db),
-            {ok, OldestPurgeSeq} = couch_db:get_oldest_purge_seq(Db),
+            PurgeSeq = couch_db:get_purge_seq(Db),
+            OldestPurgeSeq = couch_db:get_oldest_purge_seq(Db),
             PurgesToPush = PurgeSeq - OldestPurgeSeq,
             Changes = couch_db:count_changes_since(Db, UpdateSeq),
             throw({finished, Remaining + PurgesToPush + Changes})
@@ -276,7 +276,7 @@ push_purges(#acc{} = Acc0) ->
             {ok, #doc{body = {Props}}} ->
                 couch_util:get_value(<<"purge_seq">>, Props);
             {not_found, _} ->
-                {ok, Oldest} = couch_db:get_oldest_purge_seq(Db),
+                Oldest = couch_db:get_oldest_purge_seq(Db),
                 erlang:max(0, Oldest - 1)
         end,
 
@@ -299,7 +299,7 @@ push_purges(#acc{} = Acc0) ->
             {ok, _} = couch_db:update_doc(Db, Doc, [])
         end,
 
-        {ok, PurgeSeq} = couch_db:get_purge_seq(Db),
+        PurgeSeq = couch_db:get_purge_seq(Db),
         if ThroughSeq >= PurgeSeq -> ok; true ->
             Remaining = PurgeSeq - ThroughSeq,
             Changes = couch_db:count_changes_since(Db, UpdateSeq),

@@ -288,7 +288,7 @@ ensure_local_purge_doc(Db, #mrst{}=State) ->
 
 
 create_local_purge_doc(Db, State) ->
-    {ok, PurgeSeq} = couch_db:get_purge_seq(Db),
+    PurgeSeq = couch_db:get_purge_seq(Db),
     update_local_purge_doc(Db, State, PurgeSeq).
 
 

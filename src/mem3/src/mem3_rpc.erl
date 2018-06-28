@@ -159,7 +159,7 @@ load_purge_infos_rpc(DbName, SrcUUID, BatchSize) ->
                 {ok, #doc{body = {Props}}} ->
                     couch_util:get_value(<<"purge_seq">>, Props);
                 {not_found, _} ->
-                    {ok, Oldest} = couch_db:get_oldest_purge_seq(Db),
+                    Oldest = couch_db:get_oldest_purge_seq(Db),
                     erlang:max(0, Oldest - 1)
             end,
             FoldFun = fun({PSeq, UUID, Id, Revs}, {Count, Infos, _}) ->
@@ -171,7 +171,7 @@ load_purge_infos_rpc(DbName, SrcUUID, BatchSize) ->
             InitAcc = {0, [], StartSeq},
             {ok, {_, PurgeInfos, ThroughSeq}} =
                     couch_db:fold_purge_infos(Db, StartSeq, FoldFun, InitAcc),
-            {ok, PurgeSeq} = couch_db:get_purge_seq(Db),
+            PurgeSeq = couch_db:get_purge_seq(Db),
             Remaining = PurgeSeq - ThroughSeq,
             rexi:reply({ok, {PurgeDocId, PurgeInfos, ThroughSeq, Remaining}});
         Else ->

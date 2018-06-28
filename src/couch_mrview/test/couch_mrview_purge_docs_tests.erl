@@ -336,7 +336,7 @@ test_purge_compact_for_stale_purge_cp_without_client(Db) ->
 
         % check the remaining purge requests in purge tree
         {ok, Db4} = couch_db:reopen(Db3),
-        {ok, OldestPSeq} = couch_db:get_oldest_purge_seq(Db4),
+        OldestPSeq = couch_db:get_oldest_purge_seq(Db4),
         {ok, PurgedIdRevs2} = couch_db:fold_purge_infos(
                 Db4,
                 OldestPSeq - 1,
@@ -404,7 +404,7 @@ test_purge_compact_for_stale_purge_cp_with_client(Db) ->
 
         % check the remaining purge requests in purge tree
         {ok, Db4} = couch_db:reopen(Db3),
-        {ok, OldestPSeq} = couch_db:get_oldest_purge_seq(Db4),
+        OldestPSeq = couch_db:get_oldest_purge_seq(Db4),
         {ok, PurgedIdRevs2} = couch_db:fold_purge_infos(
                 Db4,
                 OldestPSeq - 1,

@@ -214,7 +214,7 @@ assert_each_prop(Db, [{changes, Expect} | Rest]) ->
     ?assertEqual(Expect, NumChanges),
     assert_each_prop(Db, Rest);
 assert_each_prop(Db, [{purge_seq, Expect} | Rest]) ->
-    {ok, PurgeSeq} = couch_db:get_purge_seq(Db),
+    PurgeSeq = couch_db:get_purge_seq(Db),
     ?assertEqual(Expect, PurgeSeq),
     assert_each_prop(Db, Rest);
 assert_each_prop(Db, [{purge_infos, Expect} | Rest]) ->

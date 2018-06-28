@@ -390,7 +390,7 @@ db_req(#httpd{method='POST',path_parts=[_,<<"_purge">>]}=Req, Db) ->
     end, IdRevs, Replies),
 
     {ok, Db2} = couch_db:reopen(Db),
-    {ok, PurgeSeq} = couch_db:get_purge_seq(Db2),
+    PurgeSeq = couch_db:get_purge_seq(Db2),
     send_json(Req, 200, {[{purge_seq, PurgeSeq}, {purged, {Results}}]});
 
 db_req(#httpd{path_parts=[_,<<"_purge">>]}=Req, _Db) ->

@@ -519,10 +519,10 @@ get_user_ctx(?OLD_DB_REC = Db) ->
     ?OLD_DB_USER_CTX(Db).
 
 get_purge_seq(#db{}=Db) ->
-    {ok, couch_db_engine:get_purge_seq(Db)}.
+    couch_db_engine:get_purge_seq(Db).
 
 get_oldest_purge_seq(#db{}=Db) ->
-    {ok, couch_db_engine:get_oldest_purge_seq(Db)}.
+    couch_db_engine:get_oldest_purge_seq(Db).
 
 get_purge_infos_limit(#db{}=Db) ->
     couch_db_engine:get_purge_infos_limit(Db).

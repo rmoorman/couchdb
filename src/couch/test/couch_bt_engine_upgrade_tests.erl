@@ -67,7 +67,7 @@ t_upgrade_without_purge_req() ->
         DbName = <<"db_without_purge_req">>,
 
         {ok, UpgradedPurged} = couch_util:with_db(DbName, fun(Db) ->
-            ?assertEqual({ok, 0}, couch_db:get_purge_seq(Db)),
+            ?assertEqual(0, couch_db:get_purge_seq(Db)),
             couch_db:fold_purge_infos(Db, 0, fun fold_fun/2, [])
         end),
         ?assertEqual([], UpgradedPurged),
@@ -79,7 +79,7 @@ t_upgrade_without_purge_req() ->
 
         couch_util:with_db(DbName, fun(Db) ->
             ?assertEqual({ok, 5}, couch_db:get_doc_count(Db)),
-            ?assertEqual({ok, 0}, couch_db:get_purge_seq(Db))
+            ?assertEqual(0, couch_db:get_purge_seq(Db))
         end),
 
         PurgeReqs = [
@@ -93,7 +93,7 @@ t_upgrade_without_purge_req() ->
 
         couch_util:with_db(DbName, fun(Db) ->
             ?assertEqual({ok, 4}, couch_db:get_doc_count(Db)),
-            ?assertEqual({ok, 1}, couch_db:get_purge_seq(Db))
+            ?assertEqual(1, couch_db:get_purge_seq(Db))
         end)
     end).
 
@@ -105,7 +105,7 @@ t_upgrade_with_1_purge_req() ->
         DbName = <<"db_with_1_purge_req">>,
 
         {ok, UpgradedPurged} = couch_util:with_db(DbName, fun(Db) ->
-            ?assertEqual({ok, 1}, couch_db:get_purge_seq(Db)),
+            ?assertEqual(1, couch_db:get_purge_seq(Db)),
             couch_db:fold_purge_infos(Db, 0, fun fold_fun/2, [])
         end),
         ?assertEqual([{1, <<"doc1">>}], UpgradedPurged),
@@ -117,7 +117,7 @@ t_upgrade_with_1_purge_req() ->
 
         couch_util:with_db(DbName, fun(Db) ->
             ?assertEqual({ok, 4}, couch_db:get_doc_count(Db)),
-            ?assertEqual({ok, 1}, couch_db:get_purge_seq(Db))
+            ?assertEqual(1, couch_db:get_purge_seq(Db))
         end),
 
         PurgeReqs = [
@@ -131,7 +131,7 @@ t_upgrade_with_1_purge_req() ->
 
         couch_util:with_db(DbName, fun(Db) ->
             ?assertEqual({ok, 3}, couch_db:get_doc_count(Db)),
-            ?assertEqual({ok, 2}, couch_db:get_purge_seq(Db))
+            ?assertEqual(2, couch_db:get_purge_seq(Db))
         end)
     end).
 
@@ -143,7 +143,7 @@ t_upgrade_with_N_purge_req() ->
         DbName = <<"db_with_2_purge_req">>,
 
         {ok, UpgradedPurged} = couch_util:with_db(DbName, fun(Db) ->
-            ?assertEqual({ok, 2}, couch_db:get_purge_seq(Db)),
+            ?assertEqual(2, couch_db:get_purge_seq(Db)),
             couch_db:fold_purge_infos(Db, 1, fun fold_fun/2, [])
         end),
         ?assertEqual([{2, <<"doc2">>}], UpgradedPurged),
@@ -153,7 +153,7 @@ t_upgrade_with_N_purge_req() ->
 
         couch_util:with_db(DbName, fun(Db) ->
             ?assertEqual({ok, 3}, couch_db:get_doc_count(Db)),
-            ?assertEqual({ok, 2}, couch_db:get_purge_seq(Db))
+            ?assertEqual(2, couch_db:get_purge_seq(Db))
         end),
 
         PurgeReqs = [
@@ -167,7 +167,7 @@ t_upgrade_with_N_purge_req() ->
 
         couch_util:with_db(DbName, fun(Db) ->
             ?assertEqual({ok, 2}, couch_db:get_doc_count(Db)),
-            ?assertEqual({ok, 3}, couch_db:get_purge_seq(Db))
+            ?assertEqual(3, couch_db:get_purge_seq(Db))
         end)
     end).
 
@@ -180,7 +180,7 @@ t_upgrade_with_1_purge_req_for_2_docs() ->
         DbName = <<"db_with_1_purge_req_for_2_docs">>,
 
         {ok, UpgradedPurged} = couch_util:with_db(DbName, fun(Db) ->
-            ?assertEqual({ok, 3}, couch_db:get_purge_seq(Db)),
+            ?assertEqual(3, couch_db:get_purge_seq(Db)),
             couch_db:fold_purge_infos(Db, 1, fun fold_fun/2, [])
         end),
         ?assertEqual([{3,<<"doc2">>},{2,<<"doc3">>}], UpgradedPurged),
@@ -190,7 +190,7 @@ t_upgrade_with_1_purge_req_for_2_docs() ->
 
         couch_util:with_db(DbName, fun(Db) ->
             ?assertEqual({ok, 4}, couch_db:get_doc_count(Db)),
-            ?assertEqual({ok, 3}, couch_db:get_purge_seq(Db))
+            ?assertEqual(3, couch_db:get_purge_seq(Db))
         end),
 
         PurgeReqs = [
@@ -204,7 +204,7 @@ t_upgrade_with_1_purge_req_for_2_docs() ->
 
         couch_util:with_db(DbName, fun(Db) ->
             ?assertEqual({ok, 3}, couch_db:get_doc_count(Db)),
-            ?assertEqual({ok, 4}, couch_db:get_purge_seq(Db))
+            ?assertEqual(4, couch_db:get_purge_seq(Db))
         end)
     end).
 
