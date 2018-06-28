@@ -39,7 +39,7 @@ cpse_purge_simple(DbName) ->
         {update_seq, 1},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos = [
         {cpse_util:uuid(), <<"foo1">>, [Rev]}
@@ -54,7 +54,7 @@ cpse_purge_simple(DbName) ->
         {update_seq, 2},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_simple_info_check(DbName) ->
@@ -87,7 +87,7 @@ cpse_purge_empty_db(DbName) ->
         {changes, 0},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_single_docid(DbName) ->
@@ -103,7 +103,7 @@ cpse_purge_single_docid(DbName) ->
         {changes, 2},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos = [
         {cpse_util:uuid(), <<"foo1">>, [Rev1]}
@@ -118,7 +118,7 @@ cpse_purge_single_docid(DbName) ->
         {changes, 1},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_multiple_docids(DbName) ->
@@ -134,7 +134,7 @@ cpse_purge_multiple_docids(DbName) ->
         {changes, 2},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos = [
         {cpse_util:uuid(), <<"foo1">>, [Rev1]},
@@ -153,7 +153,7 @@ cpse_purge_multiple_docids(DbName) ->
         {changes, 0},
         {purge_seq, 2},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_no_docids(DbName) ->
@@ -169,7 +169,7 @@ cpse_purge_no_docids(DbName) ->
         {changes, 2},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     {ok, []} = cpse_util:purge(DbName, []),
 
@@ -180,7 +180,7 @@ cpse_purge_no_docids(DbName) ->
         {changes, 2},
         {purge_seq, 0},
         {purge_infos, []}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_rev_path(DbName) ->
@@ -200,7 +200,7 @@ cpse_purge_rev_path(DbName) ->
         {changes, 1},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos = [
         {cpse_util:uuid(), <<"foo">>, [Rev2]}
@@ -216,7 +216,7 @@ cpse_purge_rev_path(DbName) ->
         {changes, 0},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_deep_revision_path(DbName) ->
@@ -245,7 +245,7 @@ cpse_purge_deep_revision_path(DbName) ->
         {changes, 0},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_partial_revs(DbName) ->
@@ -271,7 +271,7 @@ cpse_purge_partial_revs(DbName) ->
         {changes, 1},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_missing_docid(DbName) ->
@@ -287,7 +287,7 @@ cpse_purge_missing_docid(DbName) ->
         {changes, 2},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos = [
         {cpse_util:uuid(), <<"baz">>, [Rev1]}
@@ -302,7 +302,7 @@ cpse_purge_missing_docid(DbName) ->
         {changes, 2},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_duplicate_docids(DbName) ->
@@ -318,7 +318,7 @@ cpse_purge_duplicate_docids(DbName) ->
         {purge_seq, 0},
         {changes, 2},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos = [
         {cpse_util:uuid(), <<"foo1">>, [Rev1]},
@@ -335,7 +335,7 @@ cpse_purge_duplicate_docids(DbName) ->
         {purge_seq, 2},
         {changes, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_internal_revision(DbName) ->
@@ -361,7 +361,7 @@ cpse_purge_internal_revision(DbName) ->
         {changes, 1},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_missing_revision(DbName) ->
@@ -384,7 +384,7 @@ cpse_purge_missing_revision(DbName) ->
         {changes, 2},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_repeated_revisions(DbName) ->
@@ -403,7 +403,7 @@ cpse_purge_repeated_revisions(DbName) ->
         {changes, 1},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos1 = [
         {cpse_util:uuid(), <<"foo">>, [Rev1]},
@@ -421,7 +421,7 @@ cpse_purge_repeated_revisions(DbName) ->
         {changes, 0},
         {purge_seq, 2},
         {purge_infos, PurgeInfos1}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_repeated_uuid(DbName) ->
@@ -434,7 +434,7 @@ cpse_purge_repeated_uuid(DbName) ->
         {changes, 1},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos = [
         {cpse_util:uuid(), <<"foo1">>, [Rev]}
@@ -456,7 +456,7 @@ cpse_purge_repeated_uuid(DbName) ->
         {changes, 0},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 fold_all_infos(Info, Acc) ->

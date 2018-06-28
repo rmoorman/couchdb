@@ -45,7 +45,7 @@ cpse_purge_http_replication({Source, Target}) ->
         {changes, 1},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     RepObject = {[
         {<<"source">>, Source},
@@ -62,7 +62,7 @@ cpse_purge_http_replication({Source, Target}) ->
         {changes, 1},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos = [
         {cpse_util:uuid(), <<"foo">>, [Rev1]}
@@ -78,7 +78,7 @@ cpse_purge_http_replication({Source, Target}) ->
         {changes, 0},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]),
+    ], ?MODULE, ?LINE),
 
     % Show that a purge on the source is
     % not replicated to the target
@@ -95,7 +95,7 @@ cpse_purge_http_replication({Source, Target}) ->
         {changes, 1},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     % Show that replicating from the target
     % back to the source reintroduces the doc
@@ -116,7 +116,7 @@ cpse_purge_http_replication({Source, Target}) ->
         {changes, 1},
         {purge_seq, 1},
         {purge_infos, PurgeInfos}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_purge_internal_repl_disabled({Source, Target}) ->

@@ -183,16 +183,24 @@ uuid() ->
     couch_uuids:random().
 
 
-assert_db_props(DbName, Props) when is_binary(DbName) ->
+assert_db_props(DbName, Props, Module, Line) when is_binary(DbName) ->
     {ok, Db} = couch_db:open_int(DbName, []),
     try
-        assert_db_props(Db, Props)
+        assert_db_props(Db, Props, Module, Line)
+    catch error:{assertEqual, Props} ->
+        {_, Rest} = proplists:split(Props, [module, line]),
+        erlang:error({assertEqual, [{module, Module}, {line, Line} | Rest]})
     after
         couch_db:close(Db)
     end;
 
-assert_db_props(Db, Props) ->
-    assert_each_prop(Db, Props).
+assert_db_props(Db, Props, Module, Line) ->
+    try
+        assert_each_prop(Db, Props)
+    catch error:{assertEqual, Props} ->
+        {_, Rest} = proplists:split(Props, [module, line]),
+        erlang:error({assertEqual, [{module, Module}, {line, Line} | Rest]})
+    end.
 
 
 assert_each_prop(_Db, []) ->

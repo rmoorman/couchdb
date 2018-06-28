@@ -35,7 +35,7 @@ cpse_increment_purge_seq_on_complete_purge(DbName) ->
         {update_seq, 2},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos1 = [
         {cpse_util:uuid(), <<"foo1">>, [Rev1]}
@@ -49,7 +49,7 @@ cpse_increment_purge_seq_on_complete_purge(DbName) ->
         {update_seq, 3},
         {purge_seq, 1},
         {purge_infos, PurgeInfos1}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos2 = [
         {cpse_util:uuid(), <<"foo2">>, [Rev2]}
@@ -63,7 +63,7 @@ cpse_increment_purge_seq_on_complete_purge(DbName) ->
         {update_seq, 4},
         {purge_seq, 2},
         {purge_infos, PurgeInfos1 ++ PurgeInfos2}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_increment_purge_multiple_times(DbName) ->
@@ -76,7 +76,7 @@ cpse_increment_purge_multiple_times(DbName) ->
         {update_seq, 2},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos1 = [
         {cpse_util:uuid(), <<"foo1">>, [Rev1]},
@@ -92,7 +92,7 @@ cpse_increment_purge_multiple_times(DbName) ->
         {update_seq, 3},
         {purge_seq, 2},
         {purge_infos, PurgeInfos1}
-    ]).
+    ], ?MODULE, ?LINE).
 
 
 cpse_increment_purge_seq_on_partial_purge(DbName) ->
@@ -107,7 +107,7 @@ cpse_increment_purge_seq_on_partial_purge(DbName) ->
         {update_seq, 2},
         {purge_seq, 0},
         {purge_infos, []}
-    ]),
+    ], ?MODULE, ?LINE),
 
     PurgeInfos1 = [
         {cpse_util:uuid(), <<"foo1">>, [Rev1]}
@@ -121,4 +121,4 @@ cpse_increment_purge_seq_on_partial_purge(DbName) ->
         {update_seq, 3},
         {purge_seq, 1},
         {purge_infos, PurgeInfos1}
-    ]).
+    ], ?MODULE, ?LINE).
